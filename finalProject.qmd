@@ -1,0 +1,175 @@
+---
+title: "project"
+format: html
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+```
+
+## Data Set
+
+```{r}
+makeupData <- read_csv("output.csv")
+```
+
+```{r}
+#Remove rows with missing prices or irrelevant entries
+makeupData <- makeupData %>%
+  filter(!is.na(price) & price > 0)
+```
+
+## Analysis of the Data
+
+```{r}
+#Summary statistics for the price column
+summary(makeupData$price)
+
+```
+
+```{r}
+#Boxplot for overall price distribution
+ggplot(makeupData, aes(y = price)) +
+  geom_boxplot(fill = "lightblue", color = "darkblue") +
+  labs(title = "Price Distribution of Makeup Products",
+       y = "Price (in currency)")
+
+```
+
+```{r}
+#average price for each product category
+avg_price_category <- makeupData %>%
+  group_by(category) %>%
+  summarize(avg_price = mean(price, na.rm = TRUE)) %>%
+  arrange(desc(avg_price))
+
+#Barplot of average price by category
+ggplot(avg_price_category, aes(x = reorder(category, avg_price), y = avg_price)) +
+  geom_bar(stat = "identity", fill = "lightgreen") +
+  coord_flip() +  
+  labs(title = "Average Price by Product Category", x = "Product Category", y = "Average Price")
+
+```
+
+```{r}
+# Price vs Rating Scatterplot
+ggplot(makeupData, aes(x = rating, y = price)) +
+  geom_point(alpha = 0.6, color = "purple") +
+  geom_smooth(method = "lm", color = "pink", se = FALSE) +  # Adding a trend line
+  labs(title = "Price vs Rating", x = "Rating", y = "Price")
+
+```
+
+```{r}
+avg_price_brand <- makeupData %>%
+  group_by(brand) %>%
+  summarize(avg_price = mean(price, na.rm = TRUE)) %>%
+  arrange(desc(avg_price))
+
+#Bar plot of average price by brand 
+top_brands <- avg_price_brand %>%
+  top_n(15, avg_price)
+
+ggplot(top_brands, aes(x = reorder(brand, avg_price), y = avg_price)) +
+  geom_bar(stat = "identity", fill = "lightcoral") +
+  coord_flip() +  
+  labs(title = "Top 15 Brands by Average Price", x = "Brand", y = "Average Price")
+
+```
+
+```{r}
+#Boxplot of price distribution by product type
+ggplot(makeupData, aes(x = product_type, y = price)) +
+  geom_boxplot(fill = "lightyellow", color = "orange") +
+  coord_flip() +
+  labs(title = "Price Distribution by Product Type", x = "Product Type", y = "Price")
+
+```
+
+```{r}
+#Top 10 Most Expensive 
+top_expensive_brands <- avg_price_brand %>%
+  top_n(10, avg_price)
+
+# Top 10 Cheapest 
+top_cheapest_brands <- avg_price_brand %>%
+  top_n(-10, avg_price)
+
+#Bar plot of top 10 most expensive brands
+ggplot(top_expensive_brands, aes(x = reorder(brand, avg_price), y = avg_price)) +
+  geom_bar(stat = "identity", fill = "darkred") +
+  coord_flip() +
+  labs(title = "Top 10 Most Expensive Brands", x = "Brand", y = "Average Price")
+
+#Bar plot of top 10 cheapest brands
+ggplot(top_cheapest_brands, aes(x = reorder(brand, avg_price), y = avg_price)) +
+  geom_bar(stat = "identity", fill = "darkgreen") +
+  coord_flip() +
+  labs(title = "Top 10 Cheapest Brands", x = "Brand", y = "Average Price")
+
+```
+
+```{r}
+library(dplyr)
+library(tidyr) 
+library(ggplot2)
+
+cleaned_data <- makeupData %>%
+  drop_na(price, brand)  #drops rows 
+
+# Calculate price variability by brand
+price_variation_brand <- cleaned_data %>%
+  group_by(brand) %>%
+  summarize(price_sd = sd(price)) %>%
+  arrange(desc(price_sd))
+
+#top 10 brands with the highest price variability
+top_var_brands <- price_variation_brand %>%
+  top_n(10, price_sd)
+
+# Create a bar plot of top 10 brands with highest price variability
+ggplot(top_var_brands, aes(x = reorder(brand, price_sd), y = price_sd)) +
+  geom_bar(stat = "identity", fill = "orange") +
+  coord_flip() +
+  labs(
+    title = "Top 10 Brands with Highest Price Variation",
+    x = "Brand",
+    y = "Price Standard Deviation"
+  ) +
+  theme_minimal() 
+
+```
+
+```{r}
+#number of products per brand
+brand_size <- makeupData %>%
+  group_by(brand) %>%
+  summarize(product_count = n())
+
+#popular and niche brands based on the median number of products
+median_products <- median(brand_size$product_count)
+
+# Popular brands: brands with more than median number of products
+popular_brands <- brand_size %>%
+  filter(product_count > median_products)
+
+# Niche brands: brands with fewer than or equal to median number of products
+niche_brands <- brand_size %>%
+  filter(product_count <= median_products)
+
+# Join with makeupData to get price information
+popular_brand_data <- makeupData %>%
+  filter(brand %in% popular_brands$brand)
+
+niche_brand_data <- makeupData %>%
+  filter(brand %in% niche_brands$brand)
+
+#Compare average prices
+avg_price_popular <- mean(popular_brand_data$price, na.rm = TRUE)
+avg_price_niche <- mean(niche_brand_data$price, na.rm = TRUE)
+
+avg_price_popular
+avg_price_niche
+
+```
