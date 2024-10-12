@@ -1,4 +1,4 @@
-# 🎨💄 Makeup Price Analysis Project 💄🎨
+# 🎨💄 Makeup Price Analysis 💄🎨
 
 Welcome to the **Makeup Price Analysis** project! 🚀 This project analyzes the price variability of different makeup brands to discover which ones have the most diverse pricing. Whether you’re a beauty enthusiast or a data lover, there’s something here for everyone!
 
